@@ -2,20 +2,31 @@
 #Generates temporary hack shaders for previewing changes without touching .map
 import os
 
-template = \
+templates = {
+    "default": \
 """textures/atcshd/{shader_target}
 {{
       {{
             diffuseMap textures/atcshd/{shader_target}
+            specularMap textures/atcshd/{shader_target}
             normalMap textures/atcshd/re/{shader_source}_n
             heightMap textures/atcshd/re/{shader_source}_h
             normalFormat X Y Z
-            //normalScale 0. 0. 0.
       }}
 }}
-"""
+""",
+    "no-height":  \
+"""textures/atcshd/{shader_target}
+{{
+      {{
+            diffuseMap textures/atcshd/{shader_target}
+            specularMap textures/atcshd/re/{shader_target}_s
+      }}
+}}
+""",
+}
 
-textures = {
+tex_normal = {
     #2x2
     'trak4_tile2b_atcshd': None,
     'atcshd-pipe': None,
@@ -68,6 +79,10 @@ textures = {
         'eq2_trimv_mini02',
         'eq2_trimv_mini02b',
     ),
+    #flat
+    'eq2_fbase': [],
+    'eq2_bmtl': [],
+    'eq2_bmtl_01': [],
 }
 
 dirname = os.path.dirname(__file__)
@@ -76,11 +91,15 @@ filename = os.path.abspath(
         )
 
 with open(filename, 'w') as shaderfile:
-    for source, targets in textures.items():
-        if not targets:
+    for source, targets in tex_normal.items():
+        template = templates['default']
+        if targets is None:
             shaderfile.write(template.format(shader_target=source, shader_source=source))
         elif isinstance(targets, str):
             shaderfile.write(template.format(shader_target=targets, shader_source=source))
-        else:
+        elif len(targets)>0:
             for target in targets:
                 shaderfile.write(template.format(shader_target=target, shader_source=source))
+        else:
+            template = templates['no-height']
+            shaderfile.write(template.format(shader_target=source, shader_source=source))
